@@ -11,11 +11,25 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
+
+
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 	use frame_support::storage_alias;
+
+	/// define data structure used in the pallet storage
+	#[derive(Encode, Decode, MaxEncodedLen, Clone, PartialEq, Eq, Default, TypeInfo)]
+	pub struct DataStructure {
+			pub id: u32,
+	}
+
+	/// define a method to return a value, it could be used in a storage unit
+	#[pallet::type_value]
+	pub fn GetDefaultValue() -> u32 {
+		1234u32
+	}
 
 	/// the usage of storage alias
 	#[storage_alias]
@@ -30,19 +44,29 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	// The pallet's runtime storage items.
-	// https://docs.substrate.io/v3/runtime/storage
+	/// if not value query type, the default is option value, value could be some(u32) or none
 	#[pallet::storage]
 	#[pallet::getter(fn something)]
-	// Learn more about declaring storage items:
-	// https://docs.substrate.io/v3/runtime/storage#declaring-storage-items
 	pub type Something<T> = StorageValue<_, u32>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn queryvalue)]
-	// Learn more about declaring storage items:
-	// https://docs.substrate.io/v3/runtime/storage#declaring-storage-items
+	#[pallet::getter(fn option_value)]
+	pub type OptionValue<T> = StorageValue<_, u32, OptionQuery>;
+
+	/// query type storage
+	#[pallet::storage]
+	#[pallet::getter(fn query_value)]
 	pub type QueryValue<T> = StorageValue<_, u32, ValueQuery>;
+
+	/// query type with default value
+	#[pallet::storage]
+	#[pallet::getter(fn query_with_default)]
+	pub type QueryWithDefault<T> = StorageValue<_, u32, ValueQuery, GetDefaultValue>;
+
+	/// if not value query type, the default is option value, value could be some(u32) or none
+	#[pallet::storage]
+	#[pallet::getter(fn data_structure)]
+	pub type StrutureData<T> = StorageValue<_, DataStructure>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -69,7 +93,7 @@ pub mod pallet {
 		/// An example dispatchable that takes a singles value as a parameter, writes the value to
 		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
+		pub fn set_value(origin: OriginFor<T>, something: u32) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
@@ -78,9 +102,36 @@ pub mod pallet {
 			// Update storage.
 			<Something<T>>::put(something);
 
+			<QueryValue<T>>::put(something);
+
+			<OptionValue<T>>::put(something);
+
 			// Emit an event.
 			Self::deposit_event(Event::SomethingStored(something, who));
 			// Return a successful DispatchResultWithPostInfo
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn check_value(origin: OriginFor<T>) -> DispatchResult {
+
+			ensure_signed(origin)?;
+
+			match <Something<T>>::get() {
+				None => {},
+				Some(_) => {},
+			};
+
+			match <QueryValue<T>>::get() {
+				0_u32 => {},
+				_ => {},
+			};
+
+			match <OptionValue<T>>::get() {
+				None => {},
+				Some(_) => {},
+			};
+
 			Ok(())
 		}
 
@@ -101,6 +152,12 @@ pub mod pallet {
 					Ok(())
 				},
 			}
+		}
+	}
+
+	impl<T: Config> Pallet<T> {
+		pub fn internal_fn() {
+
 		}
 	}
 }
