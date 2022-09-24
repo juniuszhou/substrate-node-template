@@ -70,6 +70,5 @@ pub fn events() -> Vec<Event> {
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	// System::set_block_number(1);
 	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
 }

@@ -1,5 +1,3 @@
-//! Benchmarking setup for pallet-template
-
 use super::*;
 
 #[allow(unused)]
@@ -37,9 +35,4 @@ benchmarks! {
 		Members::<T>::insert(&caller, clubs);
 
 	}: _(RawOrigin::Root, max_club-1, caller)
-	// verify {
-	// 	assert_eq!(true, true);
-	// }
-
-	// impl_benchmark_test_suite!(Template, crate::mock::new_test_ext(), crate::mock::Test);
 }
