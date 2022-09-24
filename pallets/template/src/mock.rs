@@ -1,5 +1,5 @@
 use crate as pallet_template;
-use frame_support::traits::{ConstU16, ConstU32, ConstU64};
+use frame_support::traits::{ConstU16, ConstU64};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
@@ -57,6 +57,7 @@ parameter_types! {
 impl pallet_template::Config for Test {
 	type Event = Event;
 	type MaxClub = MaxClub;
+	type WeightInfo = ();
 }
 
 pub fn events() -> Vec<Event> {
@@ -69,5 +70,6 @@ pub fn events() -> Vec<Event> {
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
+	// System::set_block_number(1);
 	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
 }

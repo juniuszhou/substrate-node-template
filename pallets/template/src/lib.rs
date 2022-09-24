@@ -1,8 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-/// Edit this file to define custom logic or remove it if it is not needed.
-/// Learn more about FRAME and the core library of Substrate FRAME pallets:
-/// <https://docs.substrate.io/reference/frame-pallets/>
 pub use pallet::*;
 
 #[cfg(test)]
@@ -14,15 +11,14 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
+pub mod weights;
+pub use weights::WeightInfo;
+
 #[frame_support::pallet]
 pub mod pallet {
-	use codec::{Codec, Decode, Encode, MaxEncodedLen};
+	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	use sp_runtime::{
-		traits::{AtLeast32BitUnsigned, CheckedAdd, MaybeSerializeDeserialize, One, Zero},
-		RuntimeDebug,
-	};
 	type ClubId = u32;
 
 	#[pallet::pallet]
@@ -35,67 +31,44 @@ pub mod pallet {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-		// type ClubId: Parameter
-		// 	+ Member
-		// 	+ Codec
-		// 	+ Default
-		// 	+ Copy
-		// 	+ MaybeSerializeDeserialize
-		// 	+ MaxEncodedLen
-		// 	+ TypeInfo;
-
+		/// Max club number
 		#[pallet::constant]
 		type MaxClub: Get<u32>;
+
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
 	}
 
-	// The pallet's runtime storage items.
-	// https://docs.substrate.io/main-docs/build/runtime-storage/
 	#[pallet::storage]
 	#[pallet::getter(fn members)]
-	// Learn more about declaring storage items:
-	// https://docs.substrate.io/main-docs/build/runtime-storage/#declaring-storage-items
 	pub type Members<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::AccountId, BoundedVec<ClubId, T::MaxClub>, ValueQuery>;
 
-	// Pallets use events to inform users when important changes are made.
-	// https://docs.substrate.io/main-docs/build/events-errors/
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [something, who]
-		ClubMemberAdded{club: ClubId, account: T::AccountId},
-		ClubMemberRemoved(ClubId, T::AccountId),
+		/// a member added into club successfully
+		ClubMemberAdded { club: ClubId, account: T::AccountId },
+		/// a member removed from club successfully
+		ClubMemberRemoved { club: ClubId, account: T::AccountId },
 	}
 
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
-		/// Error names should be descriptive.
+		/// Club id invalid.
 		InvalidClubId,
-		/// Errors should have helpful documentation associated with them.
+		/// Try to add the existed member to club again
 		AlreadyClubMember,
+		/// Try to remove not existed member from club
 		NotClubMember,
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// An example dispatchable that takes a singles value as a parameter, writes the value to
-		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			// Update storage.
-			// <Something<T>>::put(something);
-
-			// Emit an event.
-			// Self::deposit_event(Event::SomethingStored(something, who));
-			// Return a successful DispatchResultWithPostInfo
-			Ok(())
-		}
-
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		/// add a member to a club
+		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(T::WeightInfo::add_member())]
 		pub fn add_member(
 			origin: OriginFor<T>,
 			club: ClubId,
@@ -109,13 +82,10 @@ pub mod pallet {
 				clubs.force_push(club);
 			});
 
-			// Self::deposit_event(Event::BalanceSet { who, free: new_free, reserved: new_reserved });
-
-			// Emit an event.
-			Self::deposit_event(Event::ClubMemberAdded{club, account});
+			Self::deposit_event(Event::ClubMemberAdded { club, account });
 			Ok(())
 		}
-
+		/// remove a member from a clubs
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_member(
 			origin: OriginFor<T>,
@@ -132,7 +102,7 @@ pub mod pallet {
 			});
 
 			// Emit an event.
-			Self::deposit_event(Event::ClubMemberRemoved(club, account));
+			Self::deposit_event(Event::ClubMemberRemoved { club, account });
 			Ok(())
 		}
 	}

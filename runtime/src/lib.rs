@@ -273,6 +273,7 @@ parameter_types! {
 impl pallet_template::Config for Runtime {
 	type Event = Event;
 	type MaxClub = MaxClub;
+	type WeightInfo = ();
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
