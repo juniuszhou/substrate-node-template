@@ -1,5 +1,6 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
+use crate::extra_thread;
 use node_template_runtime::{self, opaque::Block, RuntimeApi};
 use sc_client_api::BlockBackend;
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
@@ -9,7 +10,6 @@ use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpS
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use std::{sync::Arc, time::Duration};
-
 // Our native executor instance.
 pub struct ExecutorDispatch;
 
@@ -222,7 +222,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		let proposer_factory = sc_basic_authorship::ProposerFactory::new(
 			task_manager.spawn_handle(),
 			client.clone(),
-			transaction_pool,
+			transaction_pool.clone(),
 			prometheus_registry.as_ref(),
 			telemetry.as_ref().map(|x| x.handle()),
 		);
@@ -308,6 +308,13 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 			sc_consensus_grandpa::run_grandpa_voter(grandpa_config)?,
 		);
 	}
+
+	let mut extra = extra_thread::ExtraThread { transaction_pool: transaction_pool.clone() };
+	task_manager.spawn_essential_handle().spawn_blocking(
+		"extra-thread",
+		None,
+		extra_thread::run(extra),
+	);
 
 	network_starter.start_network();
 	Ok(task_manager)
