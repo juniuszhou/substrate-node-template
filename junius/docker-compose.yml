@@ -1,0 +1,17 @@
+version: 3.9
+volumes:
+  alice-volume:
+  bob-volume:
+
+services:
+  alice:
+    image: junius/alice
+    volumes:
+      - alice-volume:/data
+    command: ["alice", "--data", "/data"]
+  bob:
+    image: junius/bob
+    volumes:
+      - bob-volume:/data
+    command: ["bob", "--data", "/data"]
+
