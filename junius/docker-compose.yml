@@ -1,17 +1,28 @@
-version: 3.9
+version: '3.9'
 volumes:
   alice-volume:
   bob-volume:
 
 services:
   alice:
-    image: junius/alice
+    image: 'junius/node-template'
     volumes:
-      - alice-volume:/data
-    command: ["alice", "--data", "/data"]
+      - 'alice-volume:/data'
+    command:
+      - "node-template"
+      - "--alice"
+      - '--node-key=0000000000000000000000000000000000000000000000000000000000000001'
+    ports:
+      - '9944:9944'
+
   bob:
-    image: junius/bob
+    image: 'junius/node-template'
     volumes:
-      - bob-volume:/data
-    command: ["bob", "--data", "/data"]
+      - 'bob-volume:/data'
+    command:
+      - "node-template"
+      - "--bob"
+      - '--bootnodes=/dns4/alice/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp'
+    ports:
+      - '9945:9944'
 
