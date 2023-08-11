@@ -41,3 +41,4 @@ cargo build --target "$rustTarget" --release
 mkdir -p target/bin
 mv "target/$rustTarget/release/node-template" target/bin
 docker build target/bin -f junius/Dockerfile -t local/node-template
+rm target/bin/node-template
