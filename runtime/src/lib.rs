@@ -22,6 +22,7 @@ use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
+use sp_arithmetic::traits::{BaseArithmetic, Unsigned};
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
@@ -34,9 +35,10 @@ pub use frame_support::{
 		constants::{
 			BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND,
 		},
-		IdentityFee, Weight,
+		IdentityFee, Weight, WeightToFee,
 	},
 	StorageValue,
+	pallet_prelude::Get,
 };
 pub use frame_system::Call as SystemCall;
 pub use pallet_balances::Call as BalancesCall;
@@ -44,7 +46,7 @@ pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier};
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
-pub use sp_runtime::{Perbill, Permill};
+pub use sp_runtime::{Perbill, Permill, SaturatedConversion};
 
 /// Import the template pallet.
 pub use pallet_template;
@@ -253,12 +255,29 @@ parameter_types! {
 	pub FeeMultiplier: Multiplier = Multiplier::one();
 }
 
+pub struct AnalogConstantMultiplier<T, M>(sp_std::marker::PhantomData<(T, M)>);
+
+impl<T, M> WeightToFee for AnalogConstantMultiplier<T, M>
+where
+	T: BaseArithmetic + From<u32> + Copy + Unsigned,
+	M: Get<T>,
+{
+	type Balance = T;
+	// since analog token's decimal is 8, we need to divide the weight by 100_000_000
+	// the transfer transaction fee is about 0.02 ANLOG, which total supply is 100 million.
+	fn weight_to_fee(weight: &Weight) -> Self::Balance {
+		Self::Balance::saturated_from(weight.ref_time()).saturating_mul(M::get())
+			/ 10_000_u32.into()
+	}
+}
+
 impl pallet_transaction_payment::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
 	type OperationalFeeMultiplier = ConstU8<5>;
-	type WeightToFee = IdentityFee<Balance>;
-	type LengthToFee = IdentityFee<Balance>;
+	type WeightToFee = AnalogConstantMultiplier<Balance, ConstU128<100>>;
+	// length fee = TransactionByteFee * encoded_tx.len()
+	type LengthToFee = AnalogConstantMultiplier<Balance, ConstU128<1>>;
 	type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
 }
 

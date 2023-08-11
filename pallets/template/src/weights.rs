@@ -48,7 +48,7 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 		//  Measured:  `0`
 		//  Estimated: `0`
 		// Minimum execution time: 8_000_000 picoseconds.
-		Weight::from_parts(9_000_000, 0)
+		Weight::from_parts(9, 0)
 			.saturating_add(T::DbWeight::get().writes(1_u64))
 	}
 	/// Storage: TemplateModule Something (r:1 w:1)
@@ -73,7 +73,7 @@ impl WeightInfo for () {
 		//  Measured:  `0`
 		//  Estimated: `0`
 		// Minimum execution time: 8_000_000 picoseconds.
-		Weight::from_parts(9_000_000, 0)
+		Weight::from_parts(9, 0)
 			.saturating_add(RocksDbWeight::get().writes(1_u64))
 	}
 	/// Storage: TemplateModule Something (r:1 w:1)
