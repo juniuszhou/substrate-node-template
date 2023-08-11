@@ -8,6 +8,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use pallet_grandpa::AuthorityId as GrandpaId;
 use sp_api::impl_runtime_apis;
+use sp_arithmetic::traits::{BaseArithmetic, Unsigned};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
@@ -22,11 +23,12 @@ use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
-use sp_arithmetic::traits::{BaseArithmetic, Unsigned};
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
-	construct_runtime, parameter_types,
+	construct_runtime,
+	pallet_prelude::Get,
+	parameter_types,
 	traits::{
 		ConstBool, ConstU128, ConstU32, ConstU64, ConstU8, KeyOwnerProofSystem, Randomness,
 		StorageInfo,
@@ -38,7 +40,6 @@ pub use frame_support::{
 		IdentityFee, Weight, WeightToFee,
 	},
 	StorageValue,
-	pallet_prelude::Get,
 };
 pub use frame_system::Call as SystemCall;
 pub use pallet_balances::Call as BalancesCall;
@@ -266,8 +267,8 @@ where
 	// since analog token's decimal is 8, we need to divide the weight by 100_000_000
 	// the transfer transaction fee is about 0.02 ANLOG, which total supply is 100 million.
 	fn weight_to_fee(weight: &Weight) -> Self::Balance {
-		Self::Balance::saturated_from(weight.ref_time()).saturating_mul(M::get())
-			/ 10_000_u32.into()
+		Self::Balance::saturated_from(weight.ref_time()).saturating_mul(M::get()) /
+			10_000_u32.into()
 	}
 }
 
