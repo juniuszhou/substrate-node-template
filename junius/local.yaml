@@ -1,0 +1,41 @@
+session_name: integration
+windows:
+  - windows-name: dev
+    layout: tiled
+    shell_command_before:
+      - bash
+    panes:
+      - shell_command:
+        - sleep 1
+        - mkdir -p .vscode/log
+        - rm .vscode/log/alice.txt
+        - touch .vscode/log/alice.txt
+        - target/release/node-template
+          --alice
+          --base-path=.vscode/data/alice
+          --chain=local
+          --rpc-external
+          --rpc-cors=all
+          --rpc-methods=Unsafe
+          --unsafe-rpc-external
+          --rpc-port=9944
+          --port=30333
+          --node-key=0000000000000000000000000000000000000000000000000000000000000001
+          --validator > .vscode/log/alice.txt
+
+      - shell_command:
+        - sleep 2
+        - rm .vscode/log/bob.txt
+        - touch .vscode/log/bob.txt
+        - target/release/node-template
+          --bob
+          --base-path=.vscode/data/bob
+          --chain=local
+          --rpc-external
+          --rpc-cors=all
+          --rpc-methods=Unsafe
+          --unsafe-rpc-external
+          --rpc-port=9945
+          --port=30334
+          --bootnodes=/dns4/localhost/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+          --validator > .vscode/log/bob.txt
