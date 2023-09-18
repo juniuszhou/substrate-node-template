@@ -1,0 +1,13 @@
+[relaychain]
+default_command = "./target/release/node-template"
+default_args = [ "-lparachain=warn" ]
+
+chain = "local"
+  # relaychain nodes are by default validators
+  [[relaychain.nodes]]
+  name = "alice"
+
+  [[relaychain.nodes]]
+  name = "bob"
+
+
